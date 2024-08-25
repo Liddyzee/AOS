@@ -4,746 +4,932 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet GeoJSON Filter</title>
+    <meta name="description" content="A map of the Alberta Oil Sands regions and leases.">
+    <title>Alberta's Leased Oil Sands Area</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        /* Step 1: CSS - Styling for the body */
-        body {
-            display: flex;
-            flex-direction: column;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-            /* overflow: hidden - removed this line and now scroll bar shows up*/
-            ;
-        }
-
-        /* Step 2: CSS - Styling for the filter container */
-        #filterContainer {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-bottom: 1px solid #ccc;
-            width: 100%;
-        }
-
-        /* Step 3: CSS - Styling for the scroll container of filters */
-        #filterScrollContainer {
-            max-height: 200px;
-            /* Set max height for the scroll container */
-            overflow-y: auto;
-            /* Enable vertical scrolling */
-        }
-
-        /* Step 4: CSS - Styling for filter controls */
-        #filterControls {
-            display: inline-flex;
-            gap: 15px;
-            flex-wrap: nowrap;
-        }
-
-        /* Step 5: CSS - Styling for each filter group */
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 200px;
-            white-space: normal;
-            vertical-align: top;
-            margin-bottom: 10px;
-            /* Add some space between filter groups */
-        }
-
-        /* Step 6: CSS - Styling for checkboxes */
-        .valueCheckbox {
-            margin: 5px 0;
-            /* Add some space between checkboxes */
-        }
-
-        /* Step 7: CSS - Styling for webkit-based browsers (Chrome, Safari, etc.) */
-        #filterScrollContainer::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        #filterScrollContainer::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        #filterScrollContainer::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-
-        #filterScrollContainer::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-        /* Step 8: CSS - Styling for Firefox */
-        #filterScrollContainer {
-            scrollbar-width: thin;
-            scrollbar-color: #888 #f1f1f1;
-        }
-
-        /* Step 9: CSS - Styling for filter group labels and controls */
-        .filter-group label {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .filter-group select {
-            padding: 5px;
-            margin-bottom: 5px;
-        }
-
-        .filter-group button {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .filter-group button:hover {
-            background-color: #45a049;
-        }
-
-        /* Step 10: CSS - Styling for main content area */
-        #mainContent {
-            display: flex;
-            flex: 1;
-        }
-
-        /* Step 11: CSS - Styling for map container */
-        #mapContainer {
-            flex: 1;
-            height: calc(100vh - 100px);
-        }
-
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-
-        /* Step 12: CSS - Styling for side panel */
-        #sidePanel {
-            width: 350px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            background-color: #f9f9f9;
-            border-left: 1px solid #ccc;
-        }
-
-        /* Step 13: CSS - Styling for color controls */
-        #colorControls {
-            margin-bottom: 10px;
-        }
-
-        /* Step 14: CSS - Styling for legend */
-        #legend {
-            max-height: calc(80vh - 40px);
-            /* Subtract the height of colorControls */
-            overflow-y: auto;
-            overflow-x: hidden;
-            /* Hide horizontal scrollbar */
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-        }
-
-        /* Step 15: CSS - Styling for each legend item */
-        .legend-item {
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: pointer;
-        }
-
-        /* Step 16: CSS - Styling for legend item hover effect - this is actually not working*/
-        .legend-item:hover::after {
-            content: attr(title);
-            position: absolute;
-            left: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            background: white;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            white-space: nowrap;
-            z-index: 1000;
-        }
-
-        /* Step 17: CSS - Styling for legend color */
-        .legend-color {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
-            vertical-align: middle;
-        }
-    </style>
 </head>
+<style>
+    /* BODY
+    -------------------------------------*/
+    body {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+    }
+
+    #pageWrapper {
+        min-width: max-content;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+
+    /* PAGE TITLE
+    -------------------------------------*/
+    #pageTitle {
+        text-align: center;
+        padding: 15px;
+        background-color: #f0f0b5;
+        width: 100%;
+
+    }
+
+    #pageTitle h1 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* FILTERS
+    -------------------------------------*/
+    #filterContainer {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-bottom: 1px solid #ccc;
+        width: 100%;
+    }
+
+
+    /* Step 5: CSS - Styling for filter controls */
+    #filterControls {
+        display: inline-flex;
+        gap: 15px;
+        flex-wrap: nowrap;
+
+    }
+
+    /* Step 6: CSS - Styling for each filter group */
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+        white-space: normal;
+        vertical-align: top;
+        margin-bottom: 10px;
+        max-height: 200px;
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+
+
+    /* Step 7: CSS - Styling for checkboxes */
+    .valueCheckbox {
+        margin: 5px 0;
+    }
+
+    /* Step 4: CSS - Styling for the scroll container of filters */
+    #filterScrollContainer {
+        max-height: 220px;
+        min-width: 100%;
+        overflow-x: auto;
+        background-color: #f0f0f0;
+        /*    overflow-y: auto; */
+    }
+
+    /* Step 9: CSS - Styling for Firefox */
+    #filterScrollContainer {
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+    }
+
+    /* Step 8: CSS - Styling for webkit-based browsers (Chrome, Safari, etc.) */
+    #filterScrollContainer::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #filterScrollContainer::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    #filterScrollContainer::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    #filterScrollContainer::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Step 10: CSS - Styling for filter group labels and controls */
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .filter-group select {
+        padding: 5px;
+        margin-bottom: 5px;
+    }
+
+    .filter-group button {
+        padding: 5px 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .filter-group button:hover {
+        background-color: #45a049;
+    }
+
+    .dropdown-container {
+        position: relative;
+    }
+
+    .popup-container {
+        position: fixed;
+        background-color: white;
+        border: 1px solid #ccc;
+        padding: 10px;
+        z-index: 10000;
+        width: 200px;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .valuesScrollContainer {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    select {
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .filterSearch {
+        margin-bottom: 5px;
+        padding: 5px;
+    }
+
+    #primaryFilterGroup {
+        position: relative;
+    }
+
+
+    /* MAIN CONTAINER
+    -------------------------------------*/
+    /* Step 11: CSS - Styling for main content area */
+    #mainContent {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* Step 12: CSS - Styling for map container */
+    #mapContainer {
+        flex: 1;
+        height: calc(100vh - 160px);
+        min-width: 0;
+    }
+
+    #map {
+        height: 100%;
+        width: 100%;
+    }
+
+    /* SIDE PANEL - LEGEND
+    -------------------------------------*/
+    /* Step 13: CSS - Styling for side panel */
+    #sidePanel {
+        min-width: 250px;
+        max-width: 350px;
+        width: 25%;
+        height: calc(100vh - 160px);
+        background-color: #dedbdb;
+        border-left: 1px solid #ccc;
+        padding: 10px;
+        padding-right: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+
+    }
+
+    /* Step 14: CSS - Styling for color controls */
+    #colorControlsContainer {
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    #dropdownAndButton {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #colorPropertyDropdown {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+
+    #resetHighlight {
+        white-space: nowrap;
+        padding: 5px 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-left: 5px;
+        margin-right: 2px;
+
+    }
+
+    #resetHighlight:hover {
+        background-color: #e0e0e0;
+    }
+
+    /* Step 15: CSS - Styling for legend */
+    #legend {
+        flex-grow: 1;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        max-height: calc(100vh - 250px);
+    }
+
+    #legendContainer {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    #legendSearchContainer {
+        margin-bottom: 10px;
+        padding-right: 5px;
+    }
+
+    #legendSearch {
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    /* Step 16: CSS - Styling for legend items */
+    #legendItems {
+        overflow-y: auto;
+        flex-direction: column;
+    }
+
+    .legend-item {
+        margin-bottom: 5px;
+        cursor: pointer;
+    }
+
+    .legend-color {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+
+    #Footer {
+        background-color: darkblue;
+        color: white;
+        padding: 20px;
+        /* Add styles for your footer */
+    }
+</style>
+
 
 <body>
-
-    <!-- Step 18: HTML - Filter container with scrollable content -->
-    <div id="filterContainer">
-        <div id="filterScrollContainer">
-            <div id="filterControls">
-                <div class="filter-group">
+    <div id="pageWrapper">
+        <!--HTML SETUP LAYOUT-->
+        <!--Setup Header-->
+        <header id="pageTitle">
+            <h1>Alberta Oil Sands Leased Areas by Company - WIP</h1>
+        </header>
+        <!--****** change disabled to enabled to make Select filter active, but get messy when they click on the select filter in terms of figuring what filters have been applied and how to reset all filters-->
+        <!-- Step 18: HTML - Filter container with scrollable content -->
+        <div id="filterContainer">
+            <div id="filterScrollContainer">
+                <div id="filterControls">
 
                     <!-- Step 19: HTML - Primary filter group -->
-                    <label for="primaryPropertyDropdown">Primary Filter:</label>
-                    <select id="primaryPropertyDropdown">
-                        <option value="" disabled selected>Select filter</option>
-                    </select>
-                    <div id="primaryValuesContainer"></div>
-                    <button id="applyPrimaryFilter">Apply Primary Filter</button>
-                </div>
+                    <div class="filter-group">
+                        <label for="primaryPropertyDropdown">Primary Filter:</label>
+                        <div class="dropdown-container">
+                            <select id="primaryPropertyDropdown">
+                                <option value="" disabled selected>Select filter</option>
+                            </select>
+                            <div class="popup-container" style="display: none;">
+                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="valuesScrollContainer">
+                                    <div id="primaryValuesContainer"></div>
+                                </div>
+                                <button id="applyPrimaryFilter">Apply Primary Filter</button>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Step 20: HTML - Secondary filter group -->
-                <div class="filter-group">
-                    <label for="secondaryPropertyDropdown">Secondary Filter:</label>
-                    <select id="secondaryPropertyDropdown">
-                        <option value="" disabled selected>Select filter</option>
-                    </select>
-                    <div id="secondaryValuesContainer"></div>
-                    <button id="applySecondaryFilter">Apply Secondary Filter</button>
-                </div>
+                    <!-- Step 20: HTML - Secondary filter group -->
+                    <div class="filter-group">
+                        <label for="secondaryPropertyDropdown">Secondary Filter:</label>
+                        <div class="dropdown-container">
+                            <select id="secondaryPropertyDropdown">
+                                <option value="" disabled selected>Select filter</option>
+                            </select>
+                            <div class="popup-container" style="display: none;">
+                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="valuesScrollContainer">
+                                    <div id="secondaryValuesContainer"></div>
+                                </div>
+                                <button id="applySecondaryFilter">Apply Secondary Filter</button>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Step 21: HTML - Tertiary filter group -->
-                <div class="filter-group">
-                    <label for="tertiaryPropertyDropdown">Tertiary Filter:</label>
-                    <select id="tertiaryPropertyDropdown">
-                        <option value="" disabled selected>Select filter</option>
-                    </select>
-                    <div id="tertiaryValuesContainer"></div>
-                    <button id="applyTertiaryFilter">Apply Tertiary Filter</button>
-                </div>
 
-                <!-- Step 22: HTML - Quaternary filter group -->
-                <div class="filter-group">
-                    <label for="quaternaryPropertyDropdown">Quaternary Filter:</label>
-                    <select id="quaternaryPropertyDropdown">
-                        <option value="" disabled selected>Select filter</option>
-                    </select>
-                    <div id="quaternaryValuesContainer"></div>
-                    <button id="applyQuaternaryFilter">Apply Quaternary Filter</button>
-                </div>
-                <!-- Step 23: HTML - Quinary filter group -->
-                <div class="filter-group">
-                    <label for="quinaryPropertyDropdown">Quinary Filter:</label>
-                    <select id="quinaryPropertyDropdown">
-                        <option value="" disabled selected>Select filter</option>
-                    </select>
-                    <div id="quinaryValuesContainer"></div>
-                    <button id="applyQuinaryFilter">Apply Quinary Filter</button>
+                    <!-- Step 21: HTML - Tertiary filter group -->
+                    <div class="filter-group">
+                        <label for="tertiaryPropertyDropdown">Tertiary Filter:</label>
+                        <div class="dropdown-container">
+                            <select id="tertiaryPropertyDropdown">
+                                <option value="" disabled selected>Select filter</option>
+                            </select>
+                            <div class="popup-container" style="display: none;">
+                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="valuesScrollContainer">
+                                    <div id="tertiaryValuesContainer"></div>
+                                </div>
+                                <button id="applyTertiaryFilter">Apply Tertiary Filter</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 22: HTML - Quaternary filter group -->
+                    <div class="filter-group">
+                        <label for="quaternaryPropertyDropdown">Quaternary Filter:</label>
+                        <div class="dropdown-container">
+                            <select id="quaternaryPropertyDropdown">
+                                <option value="" disabled selected>Select filter</option>
+                            </select>
+                            <div class="popup-container" style="display: none;">
+                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="valuesScrollContainer">
+                                    <div id="quaternaryValuesContainer"></div>
+                                </div>
+                                <button id="applyQuaternaryFilter">Apply Quaternary Filter</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 23: HTML - Quinary filter group -->
+                    <div class="filter-group">
+                        <label for="quinaryPropertyDropdown">Quinary Filter:</label>
+                        <div class="dropdown-container">
+                            <select id="quinaryPropertyDropdown">
+                                <option value="" disabled selected>Select filter</option>
+                            </select>
+                            <div class="popup-container" style="display: none;">
+                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="valuesScrollContainer">
+                                    <div id="quinaryValuesContainer"></div>
+                                </div>
+                                <button id="applyQuinaryFilter">Apply Quinary Filter</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        <!--Setup Main Content-->
+        <!-- Step 24: HTML - Main content area with map and side panel -->
+        <div>
+            <main id="mainContent">
+                <!-- Step 25: HTML - Map container -->
+                <div id="mapContainer">
+                    <div id="map"></div>
+                </div>
 
-    <!-- Step 24: HTML - Main content area with map and side panel -->
-    <div id="mainContent">
-        <!-- Step 25: HTML - Map container -->
-        <div id="mapContainer">
-            <div id="map"></div>
+                <!--Setup Side Panel-->
+                <!-- Step 26: HTML - Side panel with color controls and legend -->
+                <aside id="sidePanel">
+                    <div id="colorControlsContainer">
+                        <div id="dropdownAndButton">
+                            <select id="colorPropertyDropdown">
+                                <option value="" disabled selected>Select property for coloring</option>
+                                <option value="default">Default (No color coding)</option>
+                            </select>
+                            <button id="resetHighlight">Clear Highlights</button>
+                        </div>
+                        <div id="legendSearchContainer">
+                            <input type="text" id="legendSearch" placeholder="Search legend values...">
+                        </div>
+                        <div id="legend">
+                            <div id="legendItems"></div>
+                        </div>
+                    </div>
+                </aside>
+            </main>
         </div>
-        <!-- Step 26: HTML - Side panel with color controls and legend -->
-        <div id="sidePanel">
-            <div id="colorControls">
-                <select id="colorPropertyDropdown">
-                    <option value="" disabled selected>Select property for coloring</option>
-                </select>
-                <div id="legend"></div>
-            </div>
-        </div>
-    </div>
-    <!-- Step 27: JavaScript - Include Leaflet library -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="path/to/your/javascript/file.js"></script>
 
-    <!-- Step 28: JavaScript - Main application logic -->
-    <script>
-
-        // Step 29: JavaScript & Leaflet - Initialize the map
-        const map = L.map('map').setView([0, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        let geojsonLayer;
-        let data;
-        let colorProperty = null;
-        let colorScale = null;
-        let highlightedValue = null;
-
-        // Step x: JavaScript & Leaflet - Function to reset map to show all polygons
-        const resetMap = () => {
-            if (geojsonLayer) {
-                map.removeLayer(geojsonLayer);
-            }
-            geojsonLayer = L.geoJSON(data, {
-                style: (feature) => {
-                    if (colorProperty && colorScale) {
-                        const value = feature.properties[colorProperty];
-                        return {
-                            fillColor: colorScale[value] || '#000000',
-                            fillOpacity: 0.7,
-                            color: 'black',
-                            weight: 1
-                        };
-                    }
-                    return { color: 'black' };
-                }
-            }).addTo(map);
-            map.fitBounds(geojsonLayer.getBounds());
-        };
-
-        // Step xx: JavaScript - Function to update values container with checkboxes
-        const updateValuesContainer = (propertyDropdown, valuesContainer, filterData, preserveState = false) => {
-            console.log("Updating values for:", propertyDropdown.id, "with data:", filterData);
-            const selectedProperty = propertyDropdown.value;
-            const currentState = new Map();
-
-            if (preserveState) {
-                valuesContainer.querySelectorAll('.valueCheckbox').forEach(cb => {
-                    currentState.set(cb.value, cb.checked);
-                });
-            }
-
-            valuesContainer.innerHTML = '';
-
-            if (!selectedProperty) return;
-
-            const values = new Set();
-            filterData.forEach(feature => {
-                if (feature.properties[selectedProperty] !== undefined) {
-                    values.add(String(feature.properties[selectedProperty]));
-                }
-            });
-
-            const sortedValues = Array.from(values).sort();
-
-            const selectAllCheckbox = document.createElement('input');
-            selectAllCheckbox.type = 'checkbox';
-            selectAllCheckbox.id = `selectAll_${propertyDropdown.id}`;
-            selectAllCheckbox.classList.add('selectAllCheckbox');
-            const selectAllLabel = document.createElement('label');
-            selectAllLabel.htmlFor = `selectAll_${propertyDropdown.id}`;
-            selectAllLabel.textContent = 'Select All';
-
-            valuesContainer.appendChild(selectAllCheckbox);
-            valuesContainer.appendChild(selectAllLabel);
-            valuesContainer.appendChild(document.createElement('br'));
-
-            sortedValues.forEach(value => {
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = value;
-                checkbox.checked = preserveState ? (currentState.get(value) ?? true) : true;
-                checkbox.classList.add('valueCheckbox');
-                const label = document.createElement('label');
-                label.htmlFor = value;
-                label.textContent = value;
-
-                valuesContainer.appendChild(checkbox);
-                valuesContainer.appendChild(label);
-                valuesContainer.appendChild(document.createElement('br'));
-            });
-
-            const updateSelectAll = () => {
-                const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
-                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                selectAllCheckbox.checked = allChecked;
-            };
-
-            selectAllCheckbox.addEventListener('change', () => {
-                const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
-            });
-
-            valuesContainer.addEventListener('change', (event) => {
-                if (event.target.classList.contains('valueCheckbox')) {
-                    updateSelectAll();
-                }
-            });
-
-            updateSelectAll();
-        };
-
-        // Step xx: JavaScript - Function to update filters based on selections
-        const updateFilters = () => {
-            // Get references to all the filter dropdowns and value containers
-            const primaryPropertyDropdown = document.getElementById('primaryPropertyDropdown');
-            const primaryValuesContainer = document.getElementById('primaryValuesContainer');
-            const secondaryPropertyDropdown = document.getElementById('secondaryPropertyDropdown');
-            const secondaryValuesContainer = document.getElementById('secondaryValuesContainer');
-            const tertiaryPropertyDropdown = document.getElementById('tertiaryPropertyDropdown');
-            const tertiaryValuesContainer = document.getElementById('tertiaryValuesContainer');
-            const quaternaryPropertyDropdown = document.getElementById('quaternaryPropertyDropdown');
-            const quaternaryValuesContainer = document.getElementById('quaternaryValuesContainer');
-            const quinaryPropertyDropdown = document.getElementById('quinaryPropertyDropdown');
-            const quinaryValuesContainer = document.getElementById('quinaryValuesContainer');
-
-            // Retrieve selected values and properties for primary filter
-            const selectedPrimaryProperty = primaryPropertyDropdown.value;
-            const selectedPrimaryValues = Array.from(document.querySelectorAll('#primaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            // Filter the data based on primary filter selections
-            const filteredDataForSecondary = data.features.filter(feature => selectedPrimaryValues.includes(String(feature.properties[selectedPrimaryProperty])));
-            console.log("Filtered data for secondary:", filteredDataForSecondary);
-
-            // Update secondary filter options based on filtered data
-            updateValuesContainer(secondaryPropertyDropdown, secondaryValuesContainer, filteredDataForSecondary, true);
-
-            // Retrieve selected values and properties for secondary filter
-            const selectedSecondaryProperty = secondaryPropertyDropdown.value;
-            const selectedSecondaryValues = Array.from(document.querySelectorAll('#secondaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            // Filter the data further based on secondary filter selections
-            const filteredDataForTertiary = filteredDataForSecondary.filter(feature =>
-                selectedSecondaryValues.includes(String(feature.properties[selectedSecondaryProperty]))
-            );
-            console.log("Filtered data for tertiary:", filteredDataForTertiary);
-
-            // Update tertiary filter options based on filtered data
-            updateValuesContainer(tertiaryPropertyDropdown, tertiaryValuesContainer, filteredDataForTertiary, true);
-
-            // Retrieve selected values and properties for tertiary filter
-            const selectedTertiaryProperty = tertiaryPropertyDropdown.value;
-            const selectedTertiaryValues = Array.from(document.querySelectorAll('#tertiaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            //Filter the data further based on tertiary filter selections
-            const filteredDataForQuaternary = filteredDataForTertiary.filter(feature =>
-                selectedTertiaryValues.includes(String(feature.properties[selectedTertiaryProperty]))
-            );
-            console.log("Filtered data for quaternary:", filteredDataForQuaternary);
-
-            // Update quaternary filter options based on filtered data
-            updateValuesContainer(quaternaryPropertyDropdown, quaternaryValuesContainer, filteredDataForQuaternary, true);
-
-            // Retrieve selected values and properties for quaternary filter
-            const selectedQuaternaryProperty = quaternaryPropertyDropdown.value;
-            const selectedQuaternaryValues = Array.from(document.querySelectorAll('#quaternaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            //Filter the data further based on quaternary filter selections
-            const filteredDataForQuinary = filteredDataForQuaternary.filter(feature =>
-                selectedQuaternaryValues.includes(String(feature.properties[selectedQuaternaryProperty]))
-            );
-            console.log("Filtered data for quinary:", filteredDataForQuinary);
-
-            // Update quinary filter options based on filtered data
-            updateValuesContainer(quinaryPropertyDropdown, quinaryValuesContainer, filteredDataForQuinary, true);
-        };
-
-        // Step 12: JavaScript & Leaflet - Function to apply filters to the map
-        const applyFilters = () => {
-            // Retrieve selected values and properties from all filters
-            const primaryPropertyDropdown = document.getElementById('primaryPropertyDropdown');
-            const selectedPrimaryProperty = primaryPropertyDropdown.value;
-            const selectedPrimaryValues = Array.from(document.querySelectorAll('#primaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            const secondaryPropertyDropdown = document.getElementById('secondaryPropertyDropdown');
-            const selectedSecondaryProperty = secondaryPropertyDropdown.value;
-            const selectedSecondaryValues = Array.from(document.querySelectorAll('#secondaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            const tertiaryPropertyDropdown = document.getElementById('tertiaryPropertyDropdown');
-            const selectedTertiaryProperty = tertiaryPropertyDropdown.value;
-            const selectedTertiaryValues = Array.from(document.querySelectorAll('#tertiaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            const quaternaryPropertyDropdown = document.getElementById('quaternaryPropertyDropdown');
-            const selectedQuaternaryProperty = quaternaryPropertyDropdown.value;
-            const selectedQuaternaryValues = Array.from(document.querySelectorAll('#quaternaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-
-            const quinaryPropertyDropdown = document.getElementById('quinaryPropertyDropdown');
-            const selectedQuinaryProperty = quinaryPropertyDropdown.value;
-            const selectedQuinaryValues = Array.from(document.querySelectorAll('#quinaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
-            // Adjust map view to fit the bounds of the filtered polygons
-            if (geojsonLayer.getLayers().length > 0) {
-                map.fitBounds(geojsonLayer.getBounds());
-            }
+        <!--Setup footer-->
+        <footer id="Footer">
+            <h4>Last updated: July 31, 2024</h4>
+        </footer>
 
 
-            // Remove existing geojsonLayer from the map
-            if (geojsonLayer) {
-                map.removeLayer(geojsonLayer);
-            }
-            // Apply filters to the GeoJSON data
-            geojsonLayer = L.geoJSON(data, {
-                filter: feature => {
-                    // Check if feature matches primary filter criteria
-                    const primaryMatch = !selectedPrimaryProperty || selectedPrimaryValues.includes(String(feature.properties[selectedPrimaryProperty]));
+        <!-- Step 27: JavaScript - Include Leaflet library -->
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-                    // Check if feature matches secondary filter criteria
-                    const secondaryMatch = !selectedSecondaryProperty || selectedSecondaryValues.includes(String(feature.properties[selectedSecondaryProperty]));
-
-                    // Check if feature matches tertiary filter criteria
-                    const tertiaryMatch = !selectedTertiaryProperty || selectedTertiaryValues.includes(String(feature.properties[selectedTertiaryProperty]));
-
-                    // Check if feature matches quaternary filter criteria
-                    const quaternaryMatch = !selectedQuaternaryProperty || selectedQuaternaryValues.includes(String(feature.properties[selectedQuaternaryProperty]));
-
-                    // Check if// Check if feature matches quinary filter criteria
-                    const quinaryMatch = !selectedQuinaryProperty || selectedQuinaryValues.includes(String(feature.properties[selectedQuinaryProperty]));
-
-                    // Return true if all applicable filters match
-                    return primaryMatch && secondaryMatch && tertiaryMatch && quaternaryMatch && quinaryMatch;
-                },
-                style: (feature) => {
-                    if (colorProperty && colorScale) {
-                        const value = feature.properties[colorProperty];
-                        return {
-                            fillColor: colorScale[value] || '#000000',
-                            fillOpacity: 0.7,
-                            color: 'black',
-                            weight: 1
-                        };
-                    }
-                    return { color: 'black' };
-                }
+        <!-- Step 28: JavaScript - Main application logic -->
+        <script>
+            // Step 29: JavaScript & Leaflet - Initialize the map
+            const map = L.map('map').setView([0, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Update polygon colors after applying filters
-            updatePolygonColors();
-
-            // Adjust map view to fit the bounds of the filtered polygons
-            if (geojsonLayer.getLayers().length > 0) {
-                map.fitBounds(geojsonLayer.getBounds());
-            }
-        };
-
-        // Function to generate a color scale
-        function generateColorScale(values) {
-            const uniqueValues = [...new Set(values)];
-            const hueStep = 360 / uniqueValues.length;
-            return uniqueValues.reduce((acc, value, index) => {
-                acc[value] = `hsl(${index * hueStep}, 70%, 50%)`;
-                return acc;
-            }, {});
-        }
-
-        // Helper function to get unique values from visible features
-        function getVisibleUniqueValues(property) {
-            const visibleValues = new Set();
-            if (geojsonLayer) {
-                geojsonLayer.eachLayer(layer => {
-                    if (layer.feature && layer.feature.properties[property] !== undefined) {
-                        visibleValues.add(String(layer.feature.properties[property]));
-                    }
-                });
-            }
-            return Array.from(visibleValues).sort();
-        }
-
-        // Function to update the legend
-        function updateLegend() {
-            const legendContainer = document.getElementById('legend');
-            legendContainer.innerHTML = '';
-
-            if (colorProperty && colorScale) {
-                // Add title to the legend
-                const legendTitle = document.createElement('h3');
-                legendTitle.textContent = colorProperty;
-                legendTitle.style.marginTop = '0';
-                legendTitle.style.marginBottom = '10px';
-                legendContainer.appendChild(legendTitle);
-
-                // Get visible unique values
-                const visibleValues = getVisibleUniqueValues(colorProperty);
-
-                visibleValues.forEach(value => {
-                    const color = colorScale[value] || '#000000';
-                    const item = document.createElement('div');
-                    item.className = 'legend-item';
-                    item.innerHTML = `
-                <span class="legend-color" style="background-color: ${color};"></span>
-                ${value}
-            `;
-                    legendContainer.appendChild(item);
-                });
-            }
-        }
-        // Function to update polygon colors
-        function updatePolygonColors() {
-            if (geojsonLayer && colorProperty) {
-                geojsonLayer.eachLayer(layer => {
-                    const value = layer.feature.properties[colorProperty];
-                    const color = colorScale[value] || '#000000';
-                    layer.setStyle({ fillColor: color, fillOpacity: 0.7, color: 'black', weight: 1 });
-                });
-            }
-        }
-        //function to set minimum width filters scroll container
-        function setMinimumFilterWidth() {
-            const filterControls = document.getElementById('filterControls');
-            const filterScrollContainer = document.getElementById('filterScrollContainer');
-            console.log('Setting minimum width:', filterControls.scrollWidth + 'px');
-            filterScrollContainer.style.minWidth = filterControls.scrollWidth + 'px';
-            // Force reflow
-            void filterScrollContainer.offsetWidth;
-        }
-
-        // Step 13: JavaScript - Fetch and process GeoJSON data
-        //fetch('AOS area 4326.geojson')
-        fetch('OS_Agreements_4326.geojson')
-            .then(response => response.json())
-            .then(jsonData => {
-                data = jsonData;
-                const properties = new Set();
-
-                data.features.forEach(feature => {
-                    Object.keys(feature.properties).forEach(prop => properties.add(prop));
-                });
-
-                const dropdowns = [
-                    document.getElementById('primaryPropertyDropdown'),
-                    document.getElementById('secondaryPropertyDropdown'),
-                    document.getElementById('tertiaryPropertyDropdown'),
-                    document.getElementById('quaternaryPropertyDropdown'),
-                    document.getElementById('quinaryPropertyDropdown'),
-                ];
-
-                dropdowns.forEach((dropdown, index) => {
-                    const defaultOption = document.createElement('option');
-                    defaultOption.value = "";
-                    defaultOption.text = `Select ${['primary', 'secondary', 'tertiary', 'quaternary', 'quinary'][index]} filter`;
-                    defaultOption.disabled = true;
-                    defaultOption.selected = true;
-                    dropdown.add(defaultOption);
-
-                    properties.forEach(prop => {
-                        const option = document.createElement('option');
-                        option.value = prop;
-                        option.text = prop;
-                        dropdown.add(option);
-                    });
-
-                    // Add this line after populating all dropdowns
-                    setMinimumFilterWidth();
-
-                    resetMap();
-                });
-
-                // Populate the new color property dropdown
-                const colorDropdown = document.getElementById('colorPropertyDropdown');
-                properties.forEach(prop => {
-                    const option = document.createElement('option');
-                    option.value = prop;
-                    option.text = prop;
-                    colorDropdown.add(option);
-                });
-
-                resetMap();
+            let geojsonLayer;
+            let data;
+            let colorProperty = null;
+            let colorScale = null;
+            let highlightedValue = null;
 
 
-                // Function to apply filters and update legend
-                const applyFiltersAndUpdateLegend = () => {
-                    applyFilters();
-                    updateLegend();
-                };
-
-
-                // Add these functions after the updateLegend function
-
-                // Update the highlightPolygons function
-                function highlightPolygons(value) {
-                    highlightedValue = value;
-                    if (geojsonLayer && colorProperty) {
-                        geojsonLayer.eachLayer(layer => {
-                            const featureValue = String(layer.feature.properties[colorProperty]);
-                            if (featureValue === value) {
-                                layer.setStyle({
-                                    fillOpacity: 0.9,
-                                    weight: 3,
-                                    color: 'black'
-                                });
-                                layer.bringToFront();
-                            } else {
-                                layer.setStyle({
-                                    fillOpacity: 0.3,
-                                    weight: 1,
-                                    color: 'gray'
-                                });
-                            }
-                        });
-                    }
+            // Step 30: JavaScript & Leaflet - Function to reset map to show all polygons
+            const resetMap = () => {
+                if (geojsonLayer) {
+                    map.removeLayer(geojsonLayer);
                 }
-
-                // Update the resetPolygonStyles function
-                function resetPolygonStyles() {
-                    highlightedValue = null;
-                    if (geojsonLayer && colorProperty) {
-                        geojsonLayer.eachLayer(layer => {
-                            const value = layer.feature.properties[colorProperty];
-                            const color = colorScale[value] || '#000000';
-                            layer.setStyle({
-                                fillColor: color,
+                geojsonLayer = L.geoJSON(data, {
+                    style: (feature) => {
+                        if (colorProperty && colorScale) {
+                            const value = feature.properties[colorProperty];
+                            return {
+                                fillColor: colorScale[value] || '#000000',
                                 fillOpacity: 0.7,
                                 color: 'black',
                                 weight: 1
-                            });
-                        });
+                            };
+                        }
+                        return { color: 'black' };
                     }
+                }).addTo(map);
+                map.fitBounds(geojsonLayer.getBounds());
+            };
+
+
+            // Step 31: JavaScript - Function to update values container with checkboxes
+            const updateValuesContainer = (propertyDropdown, valuesContainer, filterData, preserveState = false) => {
+                console.log("Updating values for:", propertyDropdown.id, "with data:", filterData);
+
+                const popupContainer = propertyDropdown.nextElementSibling;
+                const selectedProperty = propertyDropdown.value;
+                const currentState = new Map();
+
+                if (preserveState) {
+                    valuesContainer.querySelectorAll('.valueCheckbox').forEach(cb => {
+                        currentState.set(cb.value, cb.checked);
+                    });
                 }
 
-                // Modify the updateLegend function
-                function updateLegend() {
-                    const legendContainer = document.getElementById('legend');
-                    legendContainer.innerHTML = '';
+                valuesContainer.innerHTML = '';
 
-                    if (colorProperty && colorScale) {
-                        // Add title to the legend
-                        const legendTitle = document.createElement('h3');
-                        legendTitle.textContent = colorProperty;
-                        legendTitle.style.marginTop = '0';
-                        legendTitle.style.marginBottom = '10px';
-                        legendContainer.appendChild(legendTitle);
+                if (!selectedProperty) return;
 
-                        // Get visible unique values
-                        const visibleValues = getVisibleUniqueValues(colorProperty);
+                const values = new Set();
+                filterData.forEach(feature => {
+                    if (feature.properties[selectedProperty] !== undefined) {
+                        values.add(String(feature.properties[selectedProperty]));
+                    }
+                });
 
-                        visibleValues.forEach(value => {
+                const sortedValues = Array.from(values).sort();
+
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.id = `selectAll_${propertyDropdown.id}`;
+                selectAllCheckbox.classList.add('selectAllCheckbox');
+                const selectAllLabel = document.createElement('label');
+                selectAllLabel.htmlFor = `selectAll_${propertyDropdown.id}`;
+                selectAllLabel.textContent = 'Select All';
+
+                valuesContainer.appendChild(selectAllCheckbox);
+                valuesContainer.appendChild(selectAllLabel);
+                valuesContainer.appendChild(document.createElement('br'));
+
+                sortedValues.forEach(value => {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    checkbox.checked = preserveState ? (currentState.get(value) ?? true) : true;
+                    checkbox.classList.add('valueCheckbox');
+                    const label = document.createElement('label');
+                    label.htmlFor = value;
+                    label.textContent = value;
+
+                    valuesContainer.appendChild(checkbox);
+                    valuesContainer.appendChild(label);
+                    valuesContainer.appendChild(document.createElement('br'));
+                });
+
+                const updateSelectAll = () => {
+                    const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                    selectAllCheckbox.checked = allChecked;
+                };
+
+                selectAllCheckbox.addEventListener('change', () => {
+                    const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = selectAllCheckbox.checked;
+                    });
+                });
+
+                valuesContainer.addEventListener('change', (event) => {
+                    if (event.target.classList.contains('valueCheckbox')) {
+                        updateSelectAll();
+                    }
+                });
+
+                updateSelectAll();
+
+
+            };
+
+            // Step 32: JavaScript - Function to update filters based on selections
+            const updateFilters = () => {
+                // Get references to all the filter dropdowns and value containers
+                const primaryPropertyDropdown = document.getElementById('primaryPropertyDropdown');
+                const primaryValuesContainer = document.getElementById('primaryValuesContainer');
+                const secondaryPropertyDropdown = document.getElementById('secondaryPropertyDropdown');
+                const secondaryValuesContainer = document.getElementById('secondaryValuesContainer');
+                const tertiaryPropertyDropdown = document.getElementById('tertiaryPropertyDropdown');
+                const tertiaryValuesContainer = document.getElementById('tertiaryValuesContainer');
+                const quaternaryPropertyDropdown = document.getElementById('quaternaryPropertyDropdown');
+                const quaternaryValuesContainer = document.getElementById('quaternaryValuesContainer');
+                const quinaryPropertyDropdown = document.getElementById('quinaryPropertyDropdown');
+                const quinaryValuesContainer = document.getElementById('quinaryValuesContainer');
+
+                // Retrieve selected values and properties for primary filter
+                const selectedPrimaryProperty = primaryPropertyDropdown.value;
+                const selectedPrimaryValues = Array.from(document.querySelectorAll('#primaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                // Filter the data based on primary filter selections
+                const filteredDataForSecondary = data.features.filter(feature => selectedPrimaryValues.includes(String(feature.properties[selectedPrimaryProperty])));
+                console.log("Filtered data for secondary:", filteredDataForSecondary);
+
+                // Update secondary filter options based on filtered data
+                updateValuesContainer(secondaryPropertyDropdown, secondaryValuesContainer, filteredDataForSecondary, true);
+
+                // Retrieve selected values and properties for secondary filter
+                const selectedSecondaryProperty = secondaryPropertyDropdown.value;
+                const selectedSecondaryValues = Array.from(document.querySelectorAll('#secondaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                // Filter the data further based on secondary filter selections
+                const filteredDataForTertiary = filteredDataForSecondary.filter(feature =>
+                    selectedSecondaryValues.includes(String(feature.properties[selectedSecondaryProperty]))
+                );
+                console.log("Filtered data for tertiary:", filteredDataForTertiary);
+
+                // Update tertiary filter options based on filtered data
+                updateValuesContainer(tertiaryPropertyDropdown, tertiaryValuesContainer, filteredDataForTertiary, true);
+
+                // Retrieve selected values and properties for tertiary filter
+                const selectedTertiaryProperty = tertiaryPropertyDropdown.value;
+                const selectedTertiaryValues = Array.from(document.querySelectorAll('#tertiaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                //Filter the data further based on tertiary filter selections
+                const filteredDataForQuaternary = filteredDataForTertiary.filter(feature =>
+                    selectedTertiaryValues.includes(String(feature.properties[selectedTertiaryProperty]))
+                );
+                console.log("Filtered data for quaternary:", filteredDataForQuaternary);
+
+                // Update quaternary filter options based on filtered data
+                updateValuesContainer(quaternaryPropertyDropdown, quaternaryValuesContainer, filteredDataForQuaternary, true);
+
+                // Retrieve selected values and properties for quaternary filter
+                const selectedQuaternaryProperty = quaternaryPropertyDropdown.value;
+                const selectedQuaternaryValues = Array.from(document.querySelectorAll('#quaternaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                //Filter the data further based on quaternary filter selections
+                const filteredDataForQuinary = filteredDataForQuaternary.filter(feature =>
+                    selectedQuaternaryValues.includes(String(feature.properties[selectedQuaternaryProperty]))
+                );
+                console.log("Filtered data for quinary:", filteredDataForQuinary);
+
+                // Update quinary filter options based on filtered data
+                updateValuesContainer(quinaryPropertyDropdown, quinaryValuesContainer, filteredDataForQuinary, true);
+            };
+
+
+            // Step 33: JavaScript & Leaflet - Function to apply filters to the map
+            const applyFilters = () => {
+                // Retrieve selected values and properties from all filters
+                const primaryPropertyDropdown = document.getElementById('primaryPropertyDropdown');
+                const selectedPrimaryProperty = primaryPropertyDropdown.value;
+                const selectedPrimaryValues = Array.from(document.querySelectorAll('#primaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                const secondaryPropertyDropdown = document.getElementById('secondaryPropertyDropdown');
+                const selectedSecondaryProperty = secondaryPropertyDropdown.value;
+                const selectedSecondaryValues = Array.from(document.querySelectorAll('#secondaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                const tertiaryPropertyDropdown = document.getElementById('tertiaryPropertyDropdown');
+                const selectedTertiaryProperty = tertiaryPropertyDropdown.value;
+                const selectedTertiaryValues = Array.from(document.querySelectorAll('#tertiaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                const quaternaryPropertyDropdown = document.getElementById('quaternaryPropertyDropdown');
+                const selectedQuaternaryProperty = quaternaryPropertyDropdown.value;
+                const selectedQuaternaryValues = Array.from(document.querySelectorAll('#quaternaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+
+                const quinaryPropertyDropdown = document.getElementById('quinaryPropertyDropdown');
+                const selectedQuinaryProperty = quinaryPropertyDropdown.value;
+                const selectedQuinaryValues = Array.from(document.querySelectorAll('#quinaryValuesContainer .valueCheckbox:checked')).map(cb => cb.value);
+                // Adjust map view to fit the bounds of the filtered polygons
+                if (geojsonLayer.getLayers().length > 0) {
+                    map.fitBounds(geojsonLayer.getBounds());
+                }
+                // Remove existing geojsonLayer from the map
+                if (geojsonLayer) {
+                    map.removeLayer(geojsonLayer);
+                }
+
+                // Apply filters to the GeoJSON data
+                geojsonLayer = L.geoJSON(data, {
+                    filter: feature => {
+                        // Check if feature matches primary filter criteria
+                        const primaryMatch = !selectedPrimaryProperty || selectedPrimaryValues.includes(String(feature.properties[selectedPrimaryProperty]));
+
+                        // Check if feature matches secondary filter criteria
+                        const secondaryMatch = !selectedSecondaryProperty || selectedSecondaryValues.includes(String(feature.properties[selectedSecondaryProperty]));
+
+                        // Check if feature matches tertiary filter criteria
+                        const tertiaryMatch = !selectedTertiaryProperty || selectedTertiaryValues.includes(String(feature.properties[selectedTertiaryProperty]));
+
+                        // Check if feature matches quaternary filter criteria
+                        const quaternaryMatch = !selectedQuaternaryProperty || selectedQuaternaryValues.includes(String(feature.properties[selectedQuaternaryProperty]));
+
+                        // Check if feature matches quinary filter criteria
+                        const quinaryMatch = !selectedQuinaryProperty || selectedQuinaryValues.includes(String(feature.properties[selectedQuinaryProperty]));
+
+                        // Return true if all applicable filters match
+                        return primaryMatch && secondaryMatch && tertiaryMatch && quaternaryMatch && quinaryMatch;
+                    },
+                    style: (feature) => {
+                        if (colorProperty && colorScale) {
+                            const value = feature.properties[colorProperty];
+                            return {
+                                fillColor: colorScale[value] || '#000000',
+                                fillOpacity: 0.7,
+                                color: 'black',
+                                weight: 1
+                            };
+                        }
+                        return { color: 'black' };
+                    }
+                }).addTo(map);
+
+                // Update polygon colors after applying filters
+                updatePolygonColors();
+
+                // Adjust map view to fit the bounds of the filtered polygons
+                if (geojsonLayer.getLayers().length > 0) {
+                    map.fitBounds(geojsonLayer.getBounds());
+                }
+                document.querySelectorAll('.popup-container').forEach(popup => {
+                    popup.style.display = 'none';
+                });
+            };
+            // Add this function to toggle the popup
+            function togglePopup(dropdown) {
+                const popupContainer = dropdown.nextElementSibling;
+                const isVisible = popupContainer.style.display === 'block';
+
+                // Close all popups
+                document.querySelectorAll('.popup-container').forEach(popup => {
+                    popup.style.display = 'none';
+                });
+
+                if (!isVisible) {
+                    const rect = dropdown.getBoundingClientRect();
+                    popupContainer.style.left = `${rect.left}px`;
+                    popupContainer.style.top = `${rect.bottom + window.scrollY}px`;
+                    popupContainer.style.display = 'block';
+                }
+            }
+
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.dropdown-container')) {
+                    document.querySelectorAll('.popup-container').forEach(popup => {
+                        popup.style.display = 'none';
+                    });
+                }
+            });
+
+            // Step 34: JavaScript - Function to generate a color scale
+            function generateColorScale(values) {
+                const uniqueValues = [...new Set(values)];
+                const hueStep = 360 / uniqueValues.length;
+                return uniqueValues.reduce((acc, value, index) => {
+                    acc[value] = `hsl(${index * hueStep}, 70%, 50%)`;
+                    return acc;
+                }, {});
+            }
+
+            // Step 35: JavaScript - Helper function to get unique values from visible features
+            function getVisibleUniqueValues(property) {
+                const visibleValues = new Set();
+                if (geojsonLayer) {
+                    geojsonLayer.eachLayer(layer => {
+                        if (layer.feature && layer.feature.properties[property] !== undefined) {
+                            visibleValues.add(String(layer.feature.properties[property]));
+                        }
+                    });
+                }
+                return Array.from(visibleValues).sort();
+            }
+
+            // Step 36: JavaScript & Leaflet - Function to update polygon colors
+            function updatePolygonColors() {
+                if (geojsonLayer && colorProperty) {
+                    geojsonLayer.eachLayer(layer => {
+                        const value = layer.feature.properties[colorProperty];
+                        const color = colorScale[value] || '#000000';
+                        layer.setStyle({ fillColor: color, fillOpacity: 0.7, color: 'black', weight: 1 });
+                    });
+                }
+            }
+
+            // Step 37: JavaScript - Function to set minimum width for filters scroll container
+            function setMinimumFilterWidth() {
+                const filterControls = document.getElementById('filterControls');
+                const pageWrapper = document.getElementById('pageWrapper');
+                console.log('Setting minimum width:', filterControls.scrollWidth + 'px');
+                filterScrollContainer.style.minWidth = filterControls.scrollWidth + 'px';
+                // Force reflow
+                void filterScrollContainer.offsetWidth;
+                window.addEventListener('load', setMinimumFilterWidth);
+                window.addEventListener('resize', setMinimumFilterWidth);
+
+            }
+
+            // Step 38: JavaScript - Function to apply filters and update legend
+            const applyFiltersAndUpdateLegend = () => {
+                applyFilters();
+                updateLegend();
+            };
+
+            // Step 39: JavaScript & Leaflet - Function to highlight polygons
+            function highlightPolygons(value) {
+                highlightedValue = value;
+                if (geojsonLayer && colorProperty) {
+                    geojsonLayer.eachLayer(layer => {
+                        const featureValue = String(layer.feature.properties[colorProperty]);
+                        if (featureValue === value) {
+                            layer.setStyle({
+                                fillOpacity: 0.9,
+                                weight: 3,
+                                color: 'black'
+                            });
+                            layer.bringToFront();
+                        } else {
+                            layer.setStyle({
+                                fillOpacity: 0.3,
+                                weight: 1,
+                                color: 'gray'
+                            });
+                        }
+                    });
+
+                    // Highlight the corresponding legend item
+                    const legendItems = document.querySelectorAll('.legend-item');
+                    legendItems.forEach(item => {
+                        if (item.textContent.trim() === value) {
+                            item.style.fontWeight = 'bold';
+                            item.style.backgroundColor = '#f0f0f0';
+                        } else {
+                            item.style.fontWeight = 'normal';
+                            item.style.backgroundColor = 'transparent';
+                        }
+                    });
+                }
+            }
+
+            // Step 40: JavaScript & Leaflet - Function to reset polygon styles
+            function resetPolygonStyles() {
+                highlightedValue = null;
+                if (geojsonLayer && colorProperty) {
+                    geojsonLayer.eachLayer(layer => {
+                        const value = layer.feature.properties[colorProperty];
+                        const color = colorScale[value] || '#000000';
+                        layer.setStyle({
+                            fillColor: color,
+                            fillOpacity: 0.7,
+                            color: 'black',
+                            weight: 1
+                        });
+                    });
+                    // Reset legend item styles
+                    const legendItems = document.querySelectorAll('.legend-item');
+                    legendItems.forEach(item => {
+                        item.style.fontWeight = 'normal';
+                        item.style.backgroundColor = 'transparent';
+                    });
+                }
+            }
+
+            // Step 41: JavaScript - Function to update the legend
+            function updateLegend() {
+                const legendContainer = document.getElementById('legend');
+                const legendItemsContainer = document.getElementById('legendItems');
+                const searchInput = document.getElementById('legendSearch');
+                legendItemsContainer.innerHTML = '';
+                // Remove the old title if it exists
+                const oldTitle = legendContainer.querySelector('h3');
+                if (oldTitle) {
+                    oldTitle.remove();
+                }
+
+                if (colorProperty && colorScale) {
+                    // Add title to the legend
+                    const legendTitle = document.createElement('h3');
+                    legendTitle.textContent = colorProperty;
+                    legendTitle.style.marginTop = '0';
+                    legendTitle.style.marginBottom = '10px';
+                    legendContainer.insertBefore(legendTitle, legendItemsContainer);
+
+                    // Get visible unique values
+                    const visibleValues = getVisibleUniqueValues(colorProperty);
+
+                    // Create legend items
+                    const createLegendItems = (values) => {
+                        legendItemsContainer.innerHTML = '';
+                        values.forEach(value => {
                             const color = colorScale[value] || '#000000';
                             const item = document.createElement('div');
                             item.className = 'legend-item';
                             item.innerHTML = `
-                <span class="legend-color" style="background-color: ${color};"></span>
-                ${value}
-            `;
-
+                            <span class="legend-color" style="background-color: ${color};"></span>
+                            ${value}
+                        `;
                             // Add click event listener to legend item
                             item.addEventListener('click', () => {
                                 highlightPolygons(value);
                             });
 
-                            legendContainer.appendChild(item);
+                            legendItemsContainer.appendChild(item);
                         });
+                    };
 
-                        // Add reset button
-                        const resetButton = document.createElement('button');
-                        resetButton.textContent = 'Reset Highlight';
-                        resetButton.addEventListener('click', resetPolygonStyles);
-                        legendContainer.appendChild(resetButton);
-                    }
+                    createLegendItems(visibleValues);
+
+                    // Add search functionality
+                    searchInput.style.display = 'block';
+                    searchInput.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const filteredValues = visibleValues.filter(value =>
+                            value.toString().toLowerCase().includes(searchTerm)
+                        );
+                        createLegendItems(filteredValues);
+                    });
+                } else {
+                    // Show message when no color property is selected
+                    const defaultMessage = document.createElement('p');
+                    defaultMessage.textContent = 'No color coding applied';
+                    legendItemsContainer.appendChild(defaultMessage);
+                    searchInput.style.display = 'none';
                 }
-
-                // Modify the updatePolygonColors function
-                function updatePolygonColors() {
-                    if (geojsonLayer && colorProperty) {
-                        geojsonLayer.eachLayer(layer => {
+            }
+            // Modify the updatePolygonColors function
+            function updatePolygonColors() {
+                if (geojsonLayer) {
+                    geojsonLayer.eachLayer(layer => {
+                        if (colorProperty === null) {
+                            // Default state: all polygons are gray
+                            layer.setStyle({
+                                fillColor: '#808080', // Gray color
+                                fillOpacity: 0.7,
+                                color: 'black',
+                                weight: 1
+                            });
+                        } else {
                             const value = layer.feature.properties[colorProperty];
                             const color = colorScale[value] || '#000000';
                             if (highlightedValue === null || String(value) === highlightedValue) {
                                 layer.setStyle({
                                     fillColor: color,
                                     fillOpacity: highlightedValue === null ? 0.7 : 0.9,
-                                    color: highlightedValue === null ? 'black' : 'black',
+                                    color: 'black',
                                     weight: highlightedValue === null ? 1 : 3
                                 });
                                 if (highlightedValue !== null) {
@@ -757,67 +943,186 @@
                                     weight: 1
                                 });
                             }
-                        });
-                    }
+                        }
+                    });
                 }
+            }
 
 
+            //Function to search filters
+            function filterCheckboxes(searchInput, valuesContainer) {
+                const searchTerm = searchInput.value.toLowerCase();
+                const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
 
-
-                // Modify the colorDropdown event listener
-                colorDropdown.addEventListener('change', (event) => {
-                    colorProperty = event.target.value;
-                    const values = data.features.map(feature => feature.properties[colorProperty]);
-                    colorScale = generateColorScale(values);
-                    highlightedValue = null; // Reset highlighted value when changing color property
-                    updatePolygonColors();
-                    updateLegend();
+                checkboxes.forEach(checkbox => {
+                    const label = checkbox.nextElementSibling;
+                    const value = label.textContent.toLowerCase();
+                    if (value.includes(searchTerm)) {
+                        checkbox.style.display = '';
+                        label.style.display = '';
+                    } else {
+                        checkbox.style.display = 'none';
+                        label.style.display = 'none';
+                    }
                 });
+            }
+            // Step 42: JavaScript - Fetch and process GeoJSON data
+            fetch('OS_Agreements_4326.geojson')
+                //fetch('AOS area 4326.geojson')
+                .then(response => response.json())
+                .then(jsonData => {
+                    data = jsonData;
+                    const properties = new Set();
+
+                    data.features.forEach(feature => {
+                        Object.keys(feature.properties).forEach(prop => properties.add(prop));
+                    });
+
+                    const dropdowns = [
+                        document.getElementById('primaryPropertyDropdown'),
+                        document.getElementById('secondaryPropertyDropdown'),
+                        document.getElementById('tertiaryPropertyDropdown'),
+                        document.getElementById('quaternaryPropertyDropdown'),
+                        document.getElementById('quinaryPropertyDropdown'),
+                    ];
+
+                    dropdowns.forEach((dropdown, index) => {
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = "";
+                        defaultOption.text = `Select ${['primary', 'secondary', 'tertiary', 'quaternary', 'quinary'][index]} filter`;
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        dropdown.add(defaultOption);
+
+                        properties.forEach(prop => {
+                            const option = document.createElement('option');
+                            option.value = prop;
+                            option.text = prop;
+                            dropdown.add(option);
+                        });
+
+                        setMinimumFilterWidth();
+
+                        resetMap();
+                    });
+
+                    // Populate the new color property dropdown
+                    const colorDropdown = document.getElementById('colorPropertyDropdown');
+                    properties.forEach(prop => {
+                        const option = document.createElement('option');
+                        option.value = prop;
+                        option.text = prop;
+                        colorDropdown.add(option);
+                    });
+
+                    const resetButton = document.getElementById('resetHighlight');
+                    resetButton.addEventListener('click', resetPolygonStyles);
+
+                    resetMap();
+
+                    // Step 43: JavaScript - Set up event listeners
+                    document.getElementById('applyPrimaryFilter').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        applyFiltersAndUpdateLegend();
+                        document.querySelector('#primaryFilterGroup .popup-container').style.display = 'none';
+                    });
+                    document.getElementById('applySecondaryFilter').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        applyFiltersAndUpdateLegend();
+                        document.querySelector('#secondaryFilterGroup .popup-container').style.display = 'none';
+                    });
+                    document.getElementById('applyTertiaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
+                    document.getElementById('applyQuaternaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
+                    document.getElementById('applyQuinaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
 
 
 
 
-                // Step 14: JavaScript - Set up event listeners
 
-                // Step 14.1: Set up event listeners for filter buttons
-                document.getElementById('applyPrimaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                document.getElementById('applySecondaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                document.getElementById('applyTertiaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                document.getElementById('applyQuaternaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                document.getElementById('applyQuinaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                // Step 14.2: Set up event listeners for property dropdowns
-                document.getElementById('primaryPropertyDropdown').addEventListener('change', () => {
-                    updateValuesContainer(document.getElementById('primaryPropertyDropdown'), document.getElementById('primaryValuesContainer'), data.features);
-                    updateFilters();
-                });
-                document.getElementById('secondaryPropertyDropdown').addEventListener('change', updateFilters);
-                document.getElementById('tertiaryPropertyDropdown').addEventListener('change', updateFilters);
-                document.getElementById('quaternaryPropertyDropdown').addEventListener('change', updateFilters);
-                document.getElementById('quinaryPropertyDropdown').addEventListener('change', updateFilters);
+                    document.getElementById('primaryPropertyDropdown').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        togglePopup(event.target);
+                    });
 
-                // Step 14.3: Set up event listeners for values containers
-                document.getElementById('primaryValuesContainer').addEventListener('change', updateFilters);
-                document.getElementById('secondaryValuesContainer').addEventListener('change', updateFilters);
-                document.getElementById('tertiaryValuesContainer').addEventListener('change', updateFilters);
-                document.getElementById('quaternaryValuesContainer').addEventListener('change', updateFilters);
-                document.getElementById('quinaryValuesContainer').addEventListener('change', updateFilters);
+                    document.getElementById('primaryPropertyDropdown').addEventListener('change', (event) => {
+                        event.stopPropagation();
+                        updateValuesContainer(event.target, document.getElementById('primaryValuesContainer'), data.features);
+                        updateFilters();
+                    });
 
-                // Add event listener for the color property dropdown
-                colorDropdown.addEventListener('change', (event) => {
-                    colorProperty = event.target.value;
-                    const values = data.features.map(feature => feature.properties[colorProperty]);
-                    colorScale = generateColorScale(values);
-                    updatePolygonColors();
-                    updateLegend();
-                });
-            })
-            .catch(error => console.error('Error fetching GeoJSON data:', error));
 
-        // Call this function after populating the filters and whenever the window is resized
-        window.addEventListener('load', setMinimumFilterWidth);
-        window.addEventListener('resize', setMinimumFilterWidth);
+                    document.getElementById('secondaryPropertyDropdown').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        togglePopup(event.target);
+                    });
+                    document.getElementById('secondaryPropertyDropdown').addEventListener('change', (event) => {
+                        event.stopPropagation();
+                        updateValuesContainer(event.target, document.getElementById('secondaryValuesContainer'), data.features);
+                        updateFilters();
+                    });
 
-    </script>
+                    document.getElementById('tertiaryPropertyDropdown').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        togglePopup(event.target);
+                    });
+                    document.getElementById('tertiaryPropertyDropdown').addEventListener('change', (event) => {
+                        updateValuesContainer(event.target, document.getElementById('tertiaryValuesContainer'), data.features);
+                        updateFilters();
+                    });
+                    document.getElementById('quaternaryPropertyDropdown').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        togglePopup(event.target);
+                    });
+                    document.getElementById('quaternaryPropertyDropdown').addEventListener('change', (event) => {
+                        updateValuesContainer(event.target, document.getElementById('quaternaryValuesContainer'), data.features);
+                        updateFilters();
+                    });
+                    document.getElementById('quinaryPropertyDropdown').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        togglePopup(event.target);
+                    });
+                    document.getElementById('quinaryPropertyDropdown').addEventListener('change', (event) => {
+                        updateValuesContainer(event.target, document.getElementById('quinaryValuesContainer'), data.features);
+                        updateFilters();
+                    });
+
+
+
+                    document.getElementById('primaryValuesContainer').addEventListener('change', updateFilters);
+                    document.getElementById('secondaryValuesContainer').addEventListener('change', updateFilters);
+                    document.getElementById('tertiaryValuesContainer').addEventListener('change', updateFilters);
+                    document.getElementById('quaternaryValuesContainer').addEventListener('change', updateFilters);
+                    document.getElementById('quinaryValuesContainer').addEventListener('change', updateFilters);
+
+                    // Add event listener for the color property dropdown
+                    colorDropdown.addEventListener('change', (event) => {
+                        colorProperty = event.target.value;
+                        if (colorProperty === 'default') {
+                            colorProperty = null;
+                            colorScale = null;
+                        } else {
+                            const values = data.features.map(feature => feature.properties[colorProperty]);
+                            colorScale = generateColorScale(values);
+                        }
+                        highlightedValue = null;
+                        updatePolygonColors();
+                        updateLegend();
+                    });
+
+                    document.querySelectorAll('.filterSearch').forEach(searchInput => {
+                        searchInput.addEventListener('input', (event) => {
+                            const valuesContainer = event.target.nextElementSibling.querySelector('div');
+                            filterCheckboxes(event.target, valuesContainer);
+                        });
+                    });
+                })
+                .catch(error => console.error('Error fetching GeoJSON data:', error));
+
+            // Step 44: JavaScript - Set up window event listeners
+            window.addEventListener('load', setMinimumFilterWidth);
+            window.addEventListener('resize', setMinimumFilterWidth);
+        </script>
+    </div>
 </body>
 
 </html>
