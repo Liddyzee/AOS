@@ -444,7 +444,7 @@
 
         <!--Setup footer-->
         <footer id="Footer">
-            <h4>Last updated: July 31, 2024</h4>
+            <h4>Last updated: August 26, 2024</h4>
         </footer>
 
 
@@ -464,7 +464,8 @@
             let colorProperty = null;
             let colorScale = null;
             let highlightedValue = null;
-
+            let backgroundLayer1;
+            let backgroundLayer2;
 
             // Step 30: JavaScript & Leaflet - Function to reset map to show all polygons
             const resetMap = () => {
@@ -483,8 +484,21 @@
                             };
                         }
                         return { color: 'black' };
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.on('click', (e) => {
+                            L.popup()
+                                .setLatLng(e.latlng)
+                                .setContent(createTooltipContent(feature.properties))
+                                .openOn(map);
+                        });
                     }
                 }).addTo(map);
+
+                // Ensure background layers are at the back
+                if (backgroundLayer1) backgroundLayer1.bringToBack();
+                if (backgroundLayer2) backgroundLayer2.bringToBack();
+
                 map.fitBounds(geojsonLayer.getBounds());
             };
 
@@ -696,7 +710,16 @@
                             };
                         }
                         return { color: 'black' };
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.on('click', (e) => {
+                            L.popup()
+                                .setLatLng(e.latlng)
+                                .setContent(createTooltipContent(feature.properties))
+                                .openOn(map);
+                        });
                     }
+
                 }).addTo(map);
 
                 // Update polygon colors after applying filters
@@ -792,6 +815,9 @@
             // Step 39: JavaScript & Leaflet - Function to highlight polygons
             function highlightPolygons(value) {
                 highlightedValue = value;
+                let bounds = L.latLngBounds();
+                let highlightedLayers = [];
+
                 if (geojsonLayer && colorProperty) {
                     geojsonLayer.eachLayer(layer => {
                         const featureValue = String(layer.feature.properties[colorProperty]);
@@ -802,6 +828,8 @@
                                 color: 'black'
                             });
                             layer.bringToFront();
+                            bounds.extend(layer.getBounds());
+                            highlightedLayers.push(layer);
                         } else {
                             layer.setStyle({
                                 fillOpacity: 0.3,
@@ -821,6 +849,12 @@
                             item.style.fontWeight = 'normal';
                             item.style.backgroundColor = 'transparent';
                         }
+                    });
+                    // Zoom to the bounds of highlighted polygons with more padding
+                    if (!bounds.isValid()) return;  // Don't zoom if no polygons are highlighted
+                    map.fitBounds(bounds, {
+                        padding: [50, 50],  // Increased padding to zoom out more
+                        maxZoom: 10  // Limit the maximum zoom level
                     });
                 }
             }
@@ -845,6 +879,9 @@
                         item.style.fontWeight = 'normal';
                         item.style.backgroundColor = 'transparent';
                     });
+
+                    // Reset map zoom to show all polygons
+                    map.fitBounds(geojsonLayer.getBounds());
                 }
             }
 
@@ -947,7 +984,15 @@
                     });
                 }
             }
-
+            //Function tooltip
+            function createTooltipContent(properties) {
+                let content = '<div style="max-height: 300px; overflow-y: auto;">';
+                for (const [key, value] of Object.entries(properties)) {
+                    content += `<strong>${key}:</strong> ${value}<br>`;
+                }
+                content += '</div>';
+                return content;
+            }
 
             //Function to search filters
             function filterCheckboxes(searchInput, valuesContainer) {
@@ -966,6 +1011,39 @@
                     }
                 });
             }
+            function loadBackgroundLayers() {
+                return Promise.all([
+                    fetch('V4-1_TWP_4326.geojson').then(response => response.json()),
+                    fetch('AOS area 4326.geojson').then(response => response.json())
+                ]).then(([data1, data2]) => {
+                    backgroundLayer1 = L.geoJSON(data1, {
+                        style: {
+                            fillColor: '#e6e6e6',
+                            fillOpacity: 0.2,
+                            color: '#999999',
+                            weight: 1
+                        }
+                    }).addTo(map);
+
+                    backgroundLayer2 = L.geoJSON(data2, {
+                        style: {
+                            fillColor: '#cccccc',
+                            fillOpacity: 0.8,
+                            color: '#999999',
+                            weight: 4
+                        }
+                    }).addTo(map);
+
+                    // Ensure background layers are at the back
+                    backgroundLayer1.bringToBack();
+                    backgroundLayer2.bringToBack();
+                });
+            }
+
+            // Load background layers
+            loadBackgroundLayers();
+
+
             // Step 42: JavaScript - Fetch and process GeoJSON data
             fetch('OS_Agreements_4326.geojson')
                 //fetch('AOS area 4326.geojson')
