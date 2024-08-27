@@ -444,7 +444,7 @@
 
         <!--Setup footer-->
         <footer id="Footer">
-            <h4>Last updated: August 26, 2024</h4>
+            <h4>Last updated: July 31, 2024</h4>
         </footer>
 
 
@@ -465,7 +465,7 @@
             let colorScale = null;
             let highlightedValue = null;
             let backgroundLayer1;
-        
+            let backgroundLayer2;
 
             // Step 30: JavaScript & Leaflet - Function to reset map to show all polygons
             const resetMap = () => {
@@ -497,7 +497,7 @@
 
                 // Ensure background layers are at the back
                 if (backgroundLayer1) backgroundLayer1.bringToBack();
-             
+                if (backgroundLayer2) backgroundLayer2.bringToBack();
 
                 map.fitBounds(geojsonLayer.getBounds());
             };
@@ -558,21 +558,22 @@
                 });
 
                 const updateSelectAll = () => {
-                    const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
-                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                    const visibleCheckboxes = valuesContainer.querySelectorAll('.valueCheckbox:not([style*="display: none"])');
+                    const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
                     selectAllCheckbox.checked = allChecked;
                 };
-
                 selectAllCheckbox.addEventListener('change', () => {
-                    const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
-                    checkboxes.forEach(checkbox => {
+                    const visibleCheckboxes = valuesContainer.querySelectorAll('.valueCheckbox:not([style*="display: none"])');
+                    visibleCheckboxes.forEach(checkbox => {
                         checkbox.checked = selectAllCheckbox.checked;
                     });
                 });
 
                 valuesContainer.addEventListener('change', (event) => {
                     if (event.target.classList.contains('valueCheckbox')) {
-                        updateSelectAll();
+                        const visibleCheckboxes = valuesContainer.querySelectorAll('.valueCheckbox:not([style*="display: none"])');
+                        const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+                        selectAllCheckbox.checked = allChecked;
                     }
                 });
 
@@ -735,24 +736,22 @@
             };
             // Add this function to toggle the popup
             function togglePopup(dropdown) {
-                const popupContainer = dropdown.nextElementSibling;
-                const isVisible = popupContainer.style.display === 'block';
 
                 // Close all popups
                 document.querySelectorAll('.popup-container').forEach(popup => {
                     popup.style.display = 'none';
                 });
 
-                if (!isVisible) {
-                    const rect = dropdown.getBoundingClientRect();
-                    popupContainer.style.left = `${rect.left}px`;
-                    popupContainer.style.top = `${rect.bottom + window.scrollY}px`;
-                    popupContainer.style.display = 'block';
-                }
+                const popupContainer = dropdown.nextElementSibling;
+                const rect = dropdown.getBoundingClientRect();
+                popupContainer.style.left = `${rect.left}px`;
+                popupContainer.style.top = `${rect.bottom + window.scrollY}px`;
+                popupContainer.style.display = 'block';
             }
 
+
             document.addEventListener('click', (event) => {
-                if (!event.target.closest('.dropdown-container')) {
+                if (!event.target.closest('.dropdown-container') && !event.target.closest('.popup-container')) {
                     document.querySelectorAll('.popup-container').forEach(popup => {
                         popup.style.display = 'none';
                     });
@@ -998,26 +997,60 @@
             function filterCheckboxes(searchInput, valuesContainer) {
                 const searchTerm = searchInput.value.toLowerCase();
                 const checkboxes = valuesContainer.querySelectorAll('.valueCheckbox');
+                const selectAllCheckbox = valuesContainer.querySelector('.selectAllCheckbox');
+
+                let visibleCount = 0;
+                let allVisible = true;
 
                 checkboxes.forEach(checkbox => {
                     const label = checkbox.nextElementSibling;
                     const value = label.textContent.toLowerCase();
+
                     if (value.includes(searchTerm)) {
                         checkbox.style.display = '';
                         label.style.display = '';
+                        visibleCount++;
+                        if (!checkbox.checked) {
+                            allVisible = false;
+                        }
                     } else {
                         checkbox.style.display = 'none';
                         label.style.display = 'none';
                     }
                 });
+
+                // Update Select All checkbox
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = visibleCount > 0 && allVisible;
+                }
+
+                // Remove any <br> elements that come after hidden checkboxes
+                const brElements = valuesContainer.querySelectorAll('br');
+                brElements.forEach(br => {
+                    if (br.previousElementSibling && br.previousElementSibling.style.display === 'none') {
+                        br.style.display = 'none';
+                    } else {
+                        br.style.display = '';
+                    }
+                });
             }
+
+
             function loadBackgroundLayers() {
                 return Promise.all([
-                   
+                    fetch('V4-1_TWP_4326.geojson').then(response => response.json()),
                     fetch('AOS area 4326.geojson').then(response => response.json())
-                ]).then(([data1]) => {
-                   
-                    backgroundLayer1 = L.geoJSON(data2, {
+                ]).then(([data1, data2]) => {
+                    backgroundLayer1 = L.geoJSON(data1, {
+                        style: {
+                            fillColor: '#e6e6e6',
+                            fillOpacity: 0.2,
+                            color: '#999999',
+                            weight: 1
+                        }
+                    }).addTo(map);
+
+                    backgroundLayer2 = L.geoJSON(data2, {
                         style: {
                             fillColor: '#cccccc',
                             fillOpacity: 0.8,
@@ -1028,7 +1061,7 @@
 
                     // Ensure background layers are at the back
                     backgroundLayer1.bringToBack();
-              
+                    backgroundLayer2.bringToBack();
                 });
             }
 
@@ -1038,7 +1071,7 @@
 
             // Step 42: JavaScript - Fetch and process GeoJSON data
             fetch('OS_Agreements_4326.geojson')
-              
+                //fetch('AOS area 4326.geojson')
                 .then(response => response.json())
                 .then(jsonData => {
                     data = jsonData;
@@ -1094,66 +1127,65 @@
                     document.getElementById('applyPrimaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
-                        document.querySelector('#primaryFilterGroup .popup-container').style.display = 'none';
+                        document.querySelector('#primaryPropertyDropdown + .popup-container').style.display = 'none';
                     });
                     document.getElementById('applySecondaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
-                        document.querySelector('#secondaryFilterGroup .popup-container').style.display = 'none';
+                        document.querySelector('#secondaryPropertyDropdown + .popup-container').style.display = 'none';
                     });
-                    document.getElementById('applyTertiaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                    document.getElementById('applyQuaternaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-                    document.getElementById('applyQuinaryFilter').addEventListener('click', applyFiltersAndUpdateLegend);
-
-
-
-
-
-                    document.getElementById('primaryPropertyDropdown').addEventListener('click', (event) => {
+                    document.getElementById('applyTertiaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
-                        togglePopup(event.target);
+                        applyFiltersAndUpdateLegend();
+                        document.querySelector('#tertiaryPropertyDropdown + .popup-container').style.display = 'none';
                     });
+                    document.getElementById('applyQuaternaryFilter').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        applyFiltersAndUpdateLegend();
+                        document.querySelector('#quaternaryPropertyDropdown + .popup-container').style.display = 'none';
+                    });
+                    document.getElementById('applyQuinaryFilter').addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        applyFiltersAndUpdateLegend();
+                        document.querySelector('#quinaryPropertyDropdown + .popup-container').style.display = 'none';
+                    });
+
 
                     document.getElementById('primaryPropertyDropdown').addEventListener('change', (event) => {
                         event.stopPropagation();
                         updateValuesContainer(event.target, document.getElementById('primaryValuesContainer'), data.features);
                         updateFilters();
-                    });
-
-
-                    document.getElementById('secondaryPropertyDropdown').addEventListener('click', (event) => {
-                        event.stopPropagation();
                         togglePopup(event.target);
                     });
+
+
                     document.getElementById('secondaryPropertyDropdown').addEventListener('change', (event) => {
                         event.stopPropagation();
                         updateValuesContainer(event.target, document.getElementById('secondaryValuesContainer'), data.features);
                         updateFilters();
+                        togglePopup(event.target);
                     });
 
-                    document.getElementById('tertiaryPropertyDropdown').addEventListener('click', (event) => {
-                        event.stopPropagation();
-                        togglePopup(event.target);
-                    });
+
                     document.getElementById('tertiaryPropertyDropdown').addEventListener('change', (event) => {
+                        event.stopPropagation();
                         updateValuesContainer(event.target, document.getElementById('tertiaryValuesContainer'), data.features);
                         updateFilters();
-                    });
-                    document.getElementById('quaternaryPropertyDropdown').addEventListener('click', (event) => {
-                        event.stopPropagation();
                         togglePopup(event.target);
                     });
+
                     document.getElementById('quaternaryPropertyDropdown').addEventListener('change', (event) => {
+                        event.stopPropagation();
                         updateValuesContainer(event.target, document.getElementById('quaternaryValuesContainer'), data.features);
                         updateFilters();
-                    });
-                    document.getElementById('quinaryPropertyDropdown').addEventListener('click', (event) => {
-                        event.stopPropagation();
                         togglePopup(event.target);
                     });
+
                     document.getElementById('quinaryPropertyDropdown').addEventListener('change', (event) => {
+                        event.stopPropagation();
                         updateValuesContainer(event.target, document.getElementById('quinaryValuesContainer'), data.features);
                         updateFilters();
+                        togglePopup(event.target);
                     });
 
 
