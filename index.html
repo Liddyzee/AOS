@@ -501,8 +501,7 @@
             let colorScale = null;
             let highlightedValue = null;
             let backgroundLayer1;
-            let backgroundLayer2;
-
+          
             // Step 30: JavaScript & Leaflet - Function to reset map to show all polygons
             const resetMap = () => {
                 if (geojsonLayer) {
@@ -533,7 +532,7 @@
 
                 // Ensure background layers are at the back
                 if (backgroundLayer1) backgroundLayer1.bringToBack();
-                if (backgroundLayer2) backgroundLayer2.bringToBack();
+            
 
                 map.fitBounds(geojsonLayer.getBounds());
             };
