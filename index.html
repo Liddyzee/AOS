@@ -1074,9 +1074,8 @@
 
             function loadBackgroundLayers() {
                 return Promise.all([
-                    fetch('V4-1_TWP_4326.geojson').then(response => response.json()),
                     fetch('AOS area 4326.geojson').then(response => response.json())
-                ]).then(([data1, data2]) => {
+                ]).then(([data1]) => {
                     backgroundLayer1 = L.geoJSON(data1, {
                         style: {
                             fillColor: '#e6e6e6',
@@ -1086,18 +1085,11 @@
                         }
                     }).addTo(map);
 
-                    backgroundLayer2 = L.geoJSON(data2, {
-                        style: {
-                            fillColor: '#cccccc',
-                            fillOpacity: 0.8,
-                            color: '#999999',
-                            weight: 4
-                        }
-                    }).addTo(map);
+              
 
                     // Ensure background layers are at the back
                     backgroundLayer1.bringToBack();
-                    backgroundLayer2.bringToBack();
+                 
                 });
             }
 
