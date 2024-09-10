@@ -142,6 +142,7 @@
 
     .dropdown-container {
         position: relative;
+
     }
 
     .popup-container {
@@ -150,7 +151,7 @@
         border: 1px solid #ccc;
         padding: 10px;
         z-index: 10000;
-        width: 200px;
+        width: 180px;
         max-height: 300px;
         overflow-y: auto;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
@@ -167,9 +168,29 @@
         overflow-y: auto;
     }
 
+
+
     .filterSearch {
         margin-bottom: 5px;
         padding: 5px;
+    }
+
+    .search-container {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .clear-button {
+        position: absolute;
+        right: 1px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: gray;
+        font-size: 22px;
+        display: none;
+        /* Hidden by default */
     }
 
     #primaryFilterGroup {
@@ -331,7 +352,10 @@
                                 <option value="" disabled selected>Select filter</option>
                             </select>
                             <div class="popup-container" style="display: none;">
-                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="search-container">
+                                    <input type="text" class="filterSearch" placeholder="Search values...">
+                                    <span class="clear-button" style="display:none;">&times;</span>
+                                </div>
                                 <div class="valuesScrollContainer">
                                     <div id="primaryValuesContainer"></div>
                                 </div>
@@ -348,7 +372,10 @@
                                 <option value="" disabled selected>Select filter</option>
                             </select>
                             <div class="popup-container" style="display: none;">
-                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="search-container">
+                                    <input type="text" class="filterSearch" placeholder="Search values...">
+                                    <span class="clear-button" style="display:none;">&times;</span>
+                                </div>
                                 <div class="valuesScrollContainer">
                                     <div id="secondaryValuesContainer"></div>
                                 </div>
@@ -366,7 +393,10 @@
                                 <option value="" disabled selected>Select filter</option>
                             </select>
                             <div class="popup-container" style="display: none;">
-                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="search-container">
+                                    <input type="text" class="filterSearch" placeholder="Search values...">
+                                    <span class="clear-button" style="display:none;">&times;</span>
+                                </div>
                                 <div class="valuesScrollContainer">
                                     <div id="tertiaryValuesContainer"></div>
                                 </div>
@@ -383,7 +413,10 @@
                                 <option value="" disabled selected>Select filter</option>
                             </select>
                             <div class="popup-container" style="display: none;">
-                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="search-container">
+                                    <input type="text" class="filterSearch" placeholder="Search values...">
+                                    <span class="clear-button" style="display:none;">&times;</span>
+                                </div>
                                 <div class="valuesScrollContainer">
                                     <div id="quaternaryValuesContainer"></div>
                                 </div>
@@ -400,7 +433,10 @@
                                 <option value="" disabled selected>Select filter</option>
                             </select>
                             <div class="popup-container" style="display: none;">
-                                <input type="text" class="filterSearch" placeholder="Search values...">
+                                <div class="search-container">
+                                    <input type="text" class="filterSearch" placeholder="Search values...">
+                                    <span class="clear-button" style="display:none;">&times;</span>
+                                </div>
                                 <div class="valuesScrollContainer">
                                     <div id="quinaryValuesContainer"></div>
                                 </div>
@@ -501,6 +537,7 @@
 
                 map.fitBounds(geojsonLayer.getBounds());
             };
+
 
 
             // Step 31: JavaScript - Function to update values container with checkboxes
@@ -1128,26 +1165,40 @@
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
                         document.querySelector('#primaryPropertyDropdown + .popup-container').style.display = 'none';
+                        document.querySelector('#primaryPropertyDropdown + .popup-container .filterSearch').value = '';
+                        filterCheckboxes(document.querySelector('#primaryPropertyDropdown + .popup-container .filterSearch'), document.getElementById('primaryValuesContainer'));
                     });
+
                     document.getElementById('applySecondaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
                         document.querySelector('#secondaryPropertyDropdown + .popup-container').style.display = 'none';
+                        document.querySelector('#secondaryPropertyDropdown + .popup-container .filterSearch').value = '';
+                        filterCheckboxes(document.querySelector('#secondaryPropertyDropdown + .popup-container .filterSearch'), document.getElementById('secondaryValuesContainer'));
                     });
+
                     document.getElementById('applyTertiaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
                         document.querySelector('#tertiaryPropertyDropdown + .popup-container').style.display = 'none';
+                        document.querySelector('#tertiaryPropertyDropdown + .popup-container .filterSearch').value = '';
+                        filterCheckboxes(document.querySelector('#tertiaryPropertyDropdown + .popup-container .filterSearch'), document.getElementById('tertiaryValuesContainer'));
                     });
+
                     document.getElementById('applyQuaternaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
                         document.querySelector('#quaternaryPropertyDropdown + .popup-container').style.display = 'none';
+                        document.querySelector('#quaternaryPropertyDropdown + .popup-container .filterSearch').value = '';
+                        filterCheckboxes(document.querySelector('#quaternaryPropertyDropdown + .popup-container .filterSearch'), document.getElementById('quaternaryValuesContainer'));
                     });
+
                     document.getElementById('applyQuinaryFilter').addEventListener('click', (event) => {
                         event.stopPropagation();
                         applyFiltersAndUpdateLegend();
                         document.querySelector('#quinaryPropertyDropdown + .popup-container').style.display = 'none';
+                        document.querySelector('#quinaryPropertyDropdown + .popup-container .filterSearch').value = '';
+                        filterCheckboxes(document.querySelector('#quinaryPropertyDropdown + .popup-container .filterSearch'), document.getElementById('quinaryValuesContainer'));
                     });
 
 
@@ -1188,7 +1239,13 @@
                         togglePopup(event.target);
                     });
 
-
+                    ['primary', 'secondary', 'tertiary', 'quaternary', 'quinary'].forEach(level => {
+                        const dropdown = document.getElementById(`${level}PropertyDropdown`);
+                        dropdown.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            togglePopup(event.target);
+                        });
+                    });
 
                     document.getElementById('primaryValuesContainer').addEventListener('change', updateFilters);
                     document.getElementById('secondaryValuesContainer').addEventListener('change', updateFilters);
@@ -1212,11 +1269,30 @@
                     });
 
                     document.querySelectorAll('.filterSearch').forEach(searchInput => {
-                        searchInput.addEventListener('input', (event) => {
-                            const valuesContainer = event.target.nextElementSibling.querySelector('div');
-                            filterCheckboxes(event.target, valuesContainer);
+                        const clearButton = searchInput.parentElement.querySelector('.clear-button');
+
+                        // Show the clear button when the user types
+                        searchInput.addEventListener('input', function () {
+                            const valuesContainer = this.closest('.popup-container').querySelector('.valuesScrollContainer');
+                            filterCheckboxes(this, valuesContainer); // Existing function to filter checkboxes
+
+                            // Show or hide clear button based on input value
+                            if (this.value.length > 0) {
+                                clearButton.style.display = 'inline';  // Show the "X" button
+                            } else {
+                                clearButton.style.display = 'none';    // Hide the "X" button
+                            }
+                        });
+
+                        // Clear the input when "X" is clicked and reset filters
+                        clearButton.addEventListener('click', function () {
+                            searchInput.value = ''; // Clear the search input
+                            clearButton.style.display = 'none'; // Hide the "X" button again
+                            const valuesContainer = searchInput.closest('.popup-container').querySelector('.valuesScrollContainer');
+                            filterCheckboxes(searchInput, valuesContainer); // Reset filtered checkboxes
                         });
                     });
+
                 })
                 .catch(error => console.error('Error fetching GeoJSON data:', error));
 
